@@ -1,0 +1,102 @@
+<html>
+  <head>
+    {% include "head.html" %}
+    <script src="https://www.google.com/recaptcha/api.js"></script>
+  </head>
+
+  <body>
+    {% include "navbar.html" %}
+    <div class="container">
+      <div class="row">
+        <div class="panel panel-default col-xs-offset-1 col-xs-10">
+          <div class="panel-heading">
+            <h3 class="panel-title text-center">Welcome to WeFi!</h3>
+          </div>
+          <div class="panel-body text-justify">
+            {% if errorMessage != "" %}
+            <div class="alert alert-danger" role="alert">
+              {{ errorMessage | safe }}
+            </div>
+            {% endif %} {% if successMessage != "" %}
+            <div class="alert alert-success" role="alert">
+              {{ successMessage | safe }}
+            </div>
+            {% endif %}
+            <p>
+              We're happy you want to sign up and contribute to our community!
+              We made the registration page as simple as possible:
+            </p>
+            <form action="/registerpage" method="post">
+              <div class="row">
+                <div class="form-group col-xs-offset-1 col-xs-10 col-md-4">
+                  <label for="mail">Username:</label>
+                  <input
+                    type="text"
+                    name="username"
+                    class="form-control"
+                    id="username"
+                    placeholder="example"
+                  />
+                </div>
+                <div
+                  class="form-group col-xs-offset-1 col-md-offset-2 col-xs-10 col-md-4"
+                >
+                  <label for="pass1">Password:</label>
+                  <input
+                    type="password"
+                    name="password"
+                    class="form-control"
+                    id="pass1"
+                    placeholder="Pick a secure password"
+                  />
+                </div>
+              </div>
+              <div class="row">
+                <div class="form-group col-xs-offset-1 col-xs-10 col-md-4">
+                  <label for="mail">E-Mail Address:</label>
+                  <input
+                    type="email"
+                    name="email"
+                    class="form-control"
+                    id="mail"
+                    placeholder="noc@example.org"
+                  />
+                </div>
+                <div
+                  class="form-group col-xs-offset-1 col-md-offset-2 col-xs-10 col-md-4"
+                >
+                  <label for="terms">Terms and Conditions:</label>
+                  <p class="form-group">
+                    <input
+                      type="checkbox"
+                      name="terms"
+                      value="yes"
+                      class=""
+                      id="terms"
+                    />I agree to the <a href="/tac">Terms and Conditions</a> of
+                    using WeFi.
+                  </p>
+                </div>
+              </div>
+              <div class="row">
+                <div
+                  class="g-recaptcha col-xs-offset-2 col-md-offset-4 col-xs-10 col-md-4"
+                  data-sitekey="{{ rc_site_key }}"
+                ></div>
+              </div>
+              <br />
+              <div class="row">
+                <input
+                  type="submit"
+                  class="btn btn-primary col-xs-offset-1 col-xs-10"
+                  value="Register"
+                />
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% include "footer.html" %}
+    </div>
+  </body>
+</html>

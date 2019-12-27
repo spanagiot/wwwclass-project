@@ -1,0 +1,87 @@
+<head>{% include 'head.html' %}
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+
+        html,
+        body,
+        #map {
+            height: 100vh;
+            width: 100vw;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+</head>
+
+<body>
+    <script type="application/javascript">
+        var mymap;
+        var userLocation;
+        var userLocationAsked = false;
+
+        function getUserLocation() {
+            if (!userLocationAsked) {
+                try {
+                    //mymap.removeLayer(userLocation);
+                    userLocation.remove();
+                } catch (err) {}
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    latitude = position.coords.latitude;
+                    longitude = position.coords.longitude;
+                    mymap.flyTo({
+                        lat: latitude,
+                        lng: longitude
+                    }, 16);
+                    var userLocationIcon = L.divIcon({
+                        className: 'dot',
+                        html: "<div class=\'centraldot\'></div>",
+                        iconSize: [6, 6]
+                    });
+                    userLocation = L.marker({
+                        lat: latitude,
+                        lng: longitude
+                    }, {
+                        icon: userLocationIcon
+                    }).addTo(mymap);
+                    userLocationAsked = true;
+                });
+            }
+        }
+
+        function LoadMap() {
+            mymap = L.map('map', {
+                center: [40, 0],
+                zoom: 3
+            });
+            L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(mymap);
+            var markers = new L.markerClusterGroup({
+                disableClusteringAtZoom: 17
+            });
+            mymap.on('zoomend', function() {
+                console.log(mymap.getZoom());
+            });
+            mymap.on('moveend', function() {
+                var center = mymap.getCenter();
+                if (mymap.getZoom() > 11) {
+                    console.log(center['lat']);
+                    $.getJSON("find/" + center['lng'] + "/" + center['lat'] + "/1", function(result) {
+                        markers.clearLayers();
+                        $.each(result, function(i, poi) {
+                            markers.addLayer(L.marker([poi.location.coordinates[1], poi.location.coordinates[0]]).bindPopup("SSID: " + poi.ssid + "<br>Password: " + poi.password));
+                            mymap.addLayer(markers, {
+                                chunkedLoading: true
+                            });
+                        });
+                    });
+                }
+            });
+        }
+    </script>
+    <div id='map' class=""></div>
+
+    <body onload="LoadMap()"> {% include 'footer.html' %} </body>
+</body>

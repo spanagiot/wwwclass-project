@@ -1,0 +1,136 @@
+<head>
+  <title>{% print title %}</title>
+  {% include 'head.html' %}
+</head>
+
+<body>
+  {% include 'navbar.html' %}
+  <script type="application/javascript">
+    var mymap;
+    var apLocationMarker = null;
+    var userLocation;
+    var userLocationAsked = false;
+    function getUserLocation(){
+        if( !userLocationAsked ){
+        try{
+            //mymap.removeLayer(userLocation);
+            userLocation.remove();
+        } catch(err) {
+        }
+            navigator.geolocation.getCurrentPosition(function(position){
+                latitude = position.coords.latitude;
+                longitude = position.coords.longitude;
+                mymap.flyTo({lat: latitude, lng: longitude}, 16);
+                var userLocationIcon = L.divIcon({className:'dot',
+                    html:"<div class=\'centraldot\'></div>", iconSize:[6,6] });
+                userLocation = L.marker({lat: latitude, lng: longitude},{icon:userLocationIcon}).addTo(mymap);
+                userLocationAsked = true;
+            });
+        }
+    }
+    function LoadMap() {
+        mymap = L.map('map', {
+            center: [{{ lat }}, {{ lng }}]
+            , zoom: {{ zoom }}
+        });
+        L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(mymap);
+        var markers = new L.markerClusterGroup({ disableClusteringAtZoom: 17});
+        mymap.on('zoomend', function(){
+            console.log(mymap.getZoom());
+        });
+        mymap.on('moveend', function(){
+            var center = mymap.getCenter();
+            if(mymap.getZoom() > 11){
+                console.log(center['lat']);
+                $.getJSON( "find/" + center['lng'] + "/" + center['lat'] + "/1",function(result){
+                    markers.clearLayers();
+                    $.each(result,function(i,poi){
+                        markers.addLayer(L.marker([ poi.location.coordinates[1], poi.location.coordinates[0] ]).bindPopup("SSID: " + poi.ssid + "<br>Password: " + poi.password));
+                        mymap.addLayer(markers, {chunkedLoading: true});
+                    });
+                });
+            }
+        });
+        mymap.on('click', function(e){
+          if(!apLocationMarker){
+            apLocationMarker = L.marker(e.latlng).addTo(mymap);
+          }else{
+            apLocationMarker.setLatLng(e.latlng);
+          }
+          const addAPForm = document.forms['AddAPForm'];
+          addAPForm.elements['lat'].value = e.latlng.lat;
+          addAPForm.elements['lng'].value = e.latlng.lng;
+        });
+    }
+  </script>
+  <div class="container">
+    {% if message != '' %} 
+      {% if success %}
+      <div class="alert alert-success" role="alert">
+      {% else %}
+      <div class="alert alert-danger" role="alert">
+      {% endif %}
+        {{message}}
+      </div>
+    {% endif %}
+    <div class="row">
+      <div class="panel panel-default col-xs-offset-1 col-xs-10">
+        <div class="panel-heading">
+          <h1 class="text-center">Add a new Access Point</h1>
+        </div>
+        <div id="map" class="center-block"></div>
+        <button
+          type="button"
+          class="btn btn-default center-block"
+          onclick="getUserLocation()"
+        >
+          <span class="glyphicon glyphicon-map-marker"></span>
+        </button>
+      </div>
+    </div>
+    <div class="row">
+      <form action="/addappage" method="post" id="AddAPForm">
+        <div class="row">
+          <div class="form-group col-xs-offset-1 col-xs-10 col-md-4">
+            <label for="username">SSID:</label>
+            <input
+              type="text"
+              name="ssid"
+              class="form-control"
+              id="ssid"
+              placeholder="SSID"
+            />
+          </div>
+          <div
+            class="form-group col-xs-offset-1 col-md-offset-2 col-xs-10 col-md-4"
+          >
+            <label for="password">Password:</label>
+            <input
+              type="text"
+              name="password"
+              class="form-control"
+              id="password"
+              placeholder="Password"
+            />
+          </div>
+        </div>
+        <br />
+        <div class="row">
+          <input
+            type="submit"
+            class="btn btn-primary col-xs-offset-1 col-xs-10"
+            value="Send"
+          />
+        </div>
+        <input type="hidden" name="lat" />
+        <input type="hidden" name="lng" />
+      </form>
+    </div>
+  </div>
+
+  <body onload="LoadMap()">
+    {% include 'footer.html' %}
+  </body>
+</body>
